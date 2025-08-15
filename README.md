@@ -19,33 +19,21 @@ Here are examples of the AI video transformation capabilities:
   <tr>
     <td align="center">
       <strong>Original Input</strong><br>
-      <video width="300" controls>
-        <source src="../assets/input.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+      <img src="assets/input.gif" width="300" alt="Original robot training video">
     </td>
     <td align="center">
       <strong>Park Setting</strong><br>
-      <video width="300" controls>
-        <source src="../assets/output-park.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+      <img src="assets/output-park.gif" width="300" alt="Robot video transformed to park setting">
     </td>
   </tr>
   <tr>
     <td align="center">
       <strong>Factory Setting</strong><br>
-      <video width="300" controls>
-        <source src="../assets/output-factory.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+      <img src="assets/output-factory.gif" width="300" alt="Robot video transformed to factory setting">
     </td>
     <td align="center">
       <strong>Flash Lighting</strong><br>
-      <video width="300" controls>
-        <source src="../assets/output-flash.mp4" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
+      <img src="assets/output-flash.gif" width="300" alt="Robot video with flash lighting effects">
     </td>
   </tr>
 </table>
