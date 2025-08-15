@@ -1,20 +1,8 @@
 ## Robot Training Data Augmentation
 
-This repo showcases a technique to massively scale up robot training data. 
+This repo showcases a technique to massively multiply robot training data by augmenting training episodes with new scenes. 
 
-Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. Currently, this is powered by [RunwayML](https://runwayml.com)'s [Gen4-Alpeh](https://runwayml.com/research/introducing-runway-aleph).
-
-The [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset is used as an example.
-Tools are provided for:
-- Downloading the dataset.
-- Extracting videos from the dataset.
-- Generating new videos.
-- (coming soon) Writing back new episodes to the dataset.
-
-### Sample Outputs
-
-Here are examples of the AI video transformation capabilities:
-
+<center>
 <table>
   <tr>
     <td align="center">
@@ -37,12 +25,23 @@ Here are examples of the AI video transformation capabilities:
     </td>
   </tr>
 </table>
+</center>
+
+Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. Currently, this is powered by [RunwayML](https://runwayml.com)'s [Gen4-Alpeh](https://runwayml.com/research/introducing-runway-aleph).
+
+The [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset is used as an example.
+Tools are provided for:
+- Downloading the dataset.
+- Extracting videos from the dataset.
+- Generating new videos.
+- (coming soon) Writing back new episodes to the dataset.
 
 ### Quickstart
 
 #### Prerequisites
 
-This repo relies on video-to-video generative models from [Replicate](https://replicate.com). Load your Replicate API key in `.env`:
+- Docker is required - this tool is packaged as a container.
+- Load your [Replicate](https://replicate.com) API key in `.env` - video-to-video generative model APIs from Replicate are used:
 ```bash
 REPLICATE_API_TOKEN=XXXXXXXXXXX
 ```
