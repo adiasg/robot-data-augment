@@ -22,17 +22,17 @@ Here are examples of the AI video transformation capabilities:
       <img src="assets/input.gif" width="300" alt="Original robot training video">
     </td>
     <td align="center">
-      <strong>Park Setting</strong><br>
+      <strong>Outdoor Scene</strong><br>
       <img src="assets/output-park.gif" width="300" alt="Robot video transformed to park setting">
     </td>
   </tr>
   <tr>
     <td align="center">
-      <strong>Factory Setting</strong><br>
+      <strong>Factory Scene</strong><br>
       <img src="assets/output-factory.gif" width="300" alt="Robot video transformed to factory setting">
     </td>
     <td align="center">
-      <strong>Flash Lighting</strong><br>
+      <strong>Flashing Lights Scene</strong><br>
       <img src="assets/output-flash.gif" width="300" alt="Robot video with flash lighting effects">
     </td>
   </tr>
@@ -86,7 +86,7 @@ docker run --rm \
   oxe-tool generate_video \
   --dataset dlr_sara_grid_clamp_converted_externally_to_rlds \
   --video-name ep00001.mp4 \
-  --prompt "Dim the room lighting and add bright flashing lights" \
+  --prompt "Place the robot & table in a factory" \
   --seed 1234
 ```
 
