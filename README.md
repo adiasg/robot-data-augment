@@ -1,10 +1,10 @@
 ## Robot Training Data Augmentation
 
-This repo showcases a technique to massively scale up robot training data.
+This repo showcases a technique to massively scale up robot training data. 
 
-Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. 
+Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. Currently, this is powered by [RunwayML](https://runwayml.com)'s [Gen4-Alpeh](https://runwayml.com/research/introducing-runway-aleph).
 
-This repo provides a way to augment the [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset as an example.
+The [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset is used as an example.
 Tools are provided for:
 - Downloading the dataset.
 - Extracting videos from the dataset.
