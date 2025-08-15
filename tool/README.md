@@ -1,0 +1,149 @@
+## Robot Training Data Augmentation
+
+This repo showcases a technique to massively scale up robot training data.
+
+Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. 
+
+This repo provides a way to augment the [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset as an example.
+Tools are provided for:
+- Downloading the dataset.
+- Extracting videos from the dataset.
+- Generating new videos.
+- (coming soon) Writing back new episodes to the dataset.
+
+### Sample Outputs
+
+Here are examples of the AI video transformation capabilities:
+
+<table>
+  <tr>
+    <td align="center">
+      <strong>Original Input</strong><br>
+      <video width="300" controls>
+        <source src="../assets/input.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </td>
+    <td align="center">
+      <strong>Park Setting</strong><br>
+      <video width="300" controls>
+        <source src="../assets/output-park.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Factory Setting</strong><br>
+      <video width="300" controls>
+        <source src="../assets/output-factory.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </td>
+    <td align="center">
+      <strong>Flash Lighting</strong><br>
+      <video width="300" controls>
+        <source src="../assets/output-flash.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </td>
+  </tr>
+</table>
+
+### Quickstart
+
+#### Prerequisites
+
+This repo relies on video-to-video generative models from [Replicate](https://replicate.com). Load your Replicate API key in `.env`:
+```bash
+REPLICATE_API_TOKEN=XXXXXXXXXXX
+```
+
+#### Build
+
+```bash
+docker build -f tool/Dockerfile -t oxe-tool .
+```
+
+#### Run
+
+- Make directories for inputs and outputs:
+```bash
+mkdir oxe-datasets videos
+```
+
+- Download a sample dataset from Open-X-Embodiment:
+```bash
+docker run --rm \
+  -v "$(pwd)/oxe-datasets:/datasets" \
+  oxe-tool download_dataset \
+  --dataset dlr_sara_grid_clamp_converted_externally_to_rlds
+```
+
+- Export videos into `./videos`:
+```bash
+docker run --rm \
+  -v "$(pwd)/oxe-datasets:/datasets:ro" \
+  -v "$(pwd)/videos:/videos" \
+  oxe-tool export_video \
+  --dataset dlr_sara_grid_clamp_converted_externally_to_rlds \
+  --max_episodes 5 --fps 24 --info
+```
+
+- Generate a transformed video:
+```bash
+docker run --rm \
+  --env-file .env \
+  -v "$(pwd)/videos:/videos" \
+  oxe-tool generate_video \
+  --dataset dlr_sara_grid_clamp_converted_externally_to_rlds \
+  --video-name ep00001.mp4 \
+  --prompt "Dim the room lighting and add bright flashing lights" \
+  --seed 1234
+```
+
+### CLI Overview
+
+Run help:
+
+```bash
+docker run --rm oxe-tool --help
+docker run --rm oxe-tool download_dataset --help
+docker run --rm oxe-tool export_video --help
+docker run --rm oxe-tool generate_video --help
+```
+
+Subcommands and key options:
+
+- `download_dataset`
+  - Downloads to `/datasets` (mounted via Docker `-v`)
+  - `--dataset` (repeatable), or `--datasets` (comma/space-separated). If not provided, defaults to `dlr_sara_grid_clamp_converted_externally_to_rlds`.
+
+- `export_video`
+  - Reads from `/datasets`, writes to `/videos` (both mounted via Docker `-v`)
+  - `--dataset` (repeatable), or `--datasets` (comma/space-separated). If not provided, defaults to `dlr_sara_grid_clamp_converted_externally_to_rlds`.
+  - `--split` (default `train`), `--max_episodes` (default `5`), `--fps` (default `24`), `--display_key` (default `image`), `--info`
+
+- `generate_video`
+  - Reads/writes from `/videos` (mounted via Docker `-v`)
+  - `--dataset`: dataset name (matches directory name in video structure)
+  - `--video-name`: video filename (e.g., `ep00001.mp4`)
+  - `--prompt`: text prompt for the model
+  - `--seed`: optional integer for reproducible generations
+  - Input video must be 24fps, ≤5s, ≤1MB; aspect ratio must be one of `16:9`, `9:16`, `4:3`, `3:4`, `1:1`, `21:9`
+  - Output saved to `/videos/{dataset}/generated/{video-name}_generated-{number}.mp4`
+  - Requires `REPLICATE_API_TOKEN` in the environment (e.g., `--env-file .env`).
+
+- Future commands (coming soon): `augment_dataset`.
+
+Dataset selection can also be provided via the `DATASETS` env var (comma or space separated). If no datasets are specified, the default is `dlr_sara_grid_clamp_converted_externally_to_rlds`.
+
+### Notes
+
+- The tool downloads the Open-X-Embodiment dataset from the public mirror `gs://gresearch/robotics/`.
+- **File Organization**: 
+  - `export_video` creates dataset-specific subdirectories: `{video-dir}/{dataset}/ep{N}.mp4`
+  - `generate_video` creates organized output: `{video-dir}/{dataset}/generated/{video}_generated-{N}.mp4`
+  - Generated videos use automatic numbering to prevent overwrites
+- **Video Requirements for AI Generation**: 24fps, ≤5 seconds duration, ≤1MB file size, supported aspect ratios only
+- **Video-to-Video AI Model**: Uses RunwayML's Gen4-Aleph

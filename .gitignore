@@ -1,0 +1,5 @@
+.env
+.cursor/
+.DS_Store
+oxe-datasets/
+videos/
