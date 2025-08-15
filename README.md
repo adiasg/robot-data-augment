@@ -1,8 +1,7 @@
 ## Robot Training Data Augmentation
 
-This repo showcases a technique to massively multiply robot training data by augmenting training episodes with new scenes. 
+This repo contains a plug-and-play tool to massively multiply robot training datasets by augmenting training episodes with new scenes. Currently [RLDS](https://github.com/google-research/rlds) formatted datasets are supported, and [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) is used as an example in this repo.
 
-<center>
 <table>
   <tr>
     <td align="center">
@@ -25,11 +24,9 @@ This repo showcases a technique to massively multiply robot training data by aug
     </td>
   </tr>
 </table>
-</center>
 
 Images from training episodes are transformed into new scenes while leaving unchanged critical visual aspect such as trajectories and object interaction. Currently, this is powered by [RunwayML](https://runwayml.com)'s [Gen4-Alpeh](https://runwayml.com/research/introducing-runway-aleph).
 
-The [Open-X-Embodiment](https://github.com/google-deepmind/open_x_embodiment) dataset is used as an example.
 Tools are provided for:
 - Downloading the dataset.
 - Extracting videos from the dataset.
