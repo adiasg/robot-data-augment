@@ -37,7 +37,8 @@ def parse_dataset_args(arg_list: List[str] | None, csv: str | None, env: str | N
 
 def subcommand_download(args: argparse.Namespace) -> int:
     datasets = parse_dataset_args(args.dataset, args.datasets, os.getenv("DATASETS"))
-    return download_datasets(out_dir="/datasets", dataset_names=datasets)
+    max_episodes = getattr(args, 'max_episodes', None)
+    return download_datasets(out_dir="/datasets", dataset_names=datasets, max_episodes=max_episodes)
 
 
 def subcommand_export(args: argparse.Namespace) -> int:
@@ -79,6 +80,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     # download
     pd = sub.add_parser("download_dataset", help="Download one or more RLDS datasets from the public OXE GCS mirror")
+    pd.add_argument("--max_episodes", type=int, default=None, help="Max episodes to download per dataset (default: download all)")
     add_dataset_opts(pd)
     pd.set_defaults(func=subcommand_download)
 

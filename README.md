@@ -64,6 +64,15 @@ docker run --rm \
   --dataset dlr_sara_grid_clamp_converted_externally_to_rlds
 ```
 
+- Download only a few episodes (saves time and storage):
+```bash
+docker run --rm \
+  -v "$(pwd)/oxe-datasets:/datasets" \
+  oxe-tool download_dataset \
+  --dataset dlr_sara_grid_clamp_converted_externally_to_rlds \
+  --max_episodes 10
+```
+
 - Export videos into `./videos`:
 ```bash
 docker run --rm \
@@ -102,6 +111,7 @@ Subcommands and key options:
 - `download_dataset`
   - Downloads to `/datasets` (mounted via Docker `-v`)
   - `--dataset` (repeatable), or `--datasets` (comma/space-separated). If not provided, defaults to `dlr_sara_grid_clamp_converted_externally_to_rlds`.
+  - `--max_episodes`: optional integer to limit episodes downloaded per dataset (default: download all episodes).
 
 - `export_video`
   - Reads from `/datasets`, writes to `/videos` (both mounted via Docker `-v`)
