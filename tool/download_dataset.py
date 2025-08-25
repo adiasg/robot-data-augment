@@ -6,11 +6,20 @@ from typing import List, Optional
 
 
 def dataset_to_version(dataset_name: str) -> str:
+    if dataset_name == "droid":
+        return "1.0.1"
     if dataset_name == "robo_net":
         return "1.0.0"
     if dataset_name == "language_table":
         return "0.0.1"
     return "0.1.0"
+
+
+def _get_dataset_prefix(dataset_name: str) -> str:
+    """Get the prefix used in tfrecord filenames for different datasets."""
+    if dataset_name == "droid":
+        return "droid_101"  # droid uses droid_101-train.tfrecord-XXXXX-of-YYYYY
+    return dataset_name  # Most datasets use {dataset_name}-train.tfrecord-XXXXX-of-YYYYY
 
 
 def _download_selective(src_base: str, dst: str, dataset_name: str, version: str, max_episodes: int) -> int:
@@ -75,26 +84,54 @@ def _download_selective(src_base: str, dst: str, dataset_name: str, version: str
         return 1
     
     total_shards = len(shard_lengths)
-    for shard_idx in shards_needed:
-        # Build filename from template
+    new_total_shards = len(shards_needed)
+    dataset_prefix = _get_dataset_prefix(dataset_name)
+    
+    for new_shard_idx, original_shard_idx in enumerate(shards_needed):
+        # Build original filename from template
         # Template format: "{DATASET}-{SPLIT}.{FILEFORMAT}-{SHARD_X_OF_Y}"
-        filename = filepath_template.format(
-            DATASET=dataset_name,
+        # But some datasets like droid use custom prefixes
+        original_filename = filepath_template.format(
+            DATASET=dataset_prefix,
             SPLIT="train",
             FILEFORMAT="tfrecord",
-            SHARD_X_OF_Y=f"{shard_idx:05d}-of-{total_shards:05d}"
+            SHARD_X_OF_Y=f"{original_shard_idx:05d}-of-{total_shards:05d}"
         )
         
-        src_file = f"{src_base}/{filename}"
-        dst_file = os.path.join(version_dst, filename)
-        print(f"[INFO] Downloading shard {shard_idx+1}/{len(shards_needed)}: {src_file} -> {dst_file}")
-        cmd = ["gsutil", "cp", src_file, dst_file]
+        # Build new filename with updated shard count
+        new_filename = filepath_template.format(
+            DATASET=dataset_prefix,
+            SPLIT="train",
+            FILEFORMAT="tfrecord",
+            SHARD_X_OF_Y=f"{new_shard_idx:05d}-of-{new_total_shards:05d}"
+        )
+        
+        src_file = f"{src_base}/{original_filename}"
+        temp_dst_file = os.path.join(version_dst, original_filename)
+        final_dst_file = os.path.join(version_dst, new_filename)
+        
+        print(f"[INFO] Downloading shard {new_shard_idx+1}/{len(shards_needed)}: {src_file}")
+        cmd = ["gsutil", "cp", src_file, temp_dst_file]
         print(f"[CMD] {' '.join(shlex.quote(c) for c in cmd)}")
         rc = subprocess.call(cmd)
         if rc != 0:
             print(f"[ERROR] Failed to download shard {src_file}")
             return rc
+        
+        # Rename the file to match the new shard numbering
+        if temp_dst_file != final_dst_file:
+            os.rename(temp_dst_file, final_dst_file)
+            print(f"[INFO] Renamed {original_filename} -> {new_filename}")
     
+    # Update dataset_info.json to only reference the downloaded shards
+    # This is crucial so TensorFlow Datasets doesn't try to read missing files
+    train_split["shardLengths"] = [shard_lengths[i] for i in shards_needed]
+    
+    # Write the updated dataset_info.json
+    with open(dataset_info_path, 'w') as f:
+        json.dump(dataset_info, f, indent=2)
+    
+    print(f"[INFO] Updated dataset_info.json to reference only {len(shards_needed)} downloaded shards")
     print(f"[DONE] Downloaded {len(shards_needed)} shards containing ~{episodes_so_far} episodes")
     return 0
 

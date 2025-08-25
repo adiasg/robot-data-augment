@@ -8,18 +8,39 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from PIL import Image
 
+from download_dataset import dataset_to_version
+
 # Reduce TensorFlow Python logger verbosity as well
 tf.get_logger().setLevel("ERROR")
 
 
 def dataset2path(dataset_name: str) -> str:
-    if dataset_name == "robo_net":
-        version = "1.0.0"
-    elif dataset_name == "language_table":
-        version = "0.0.1"
-    else:
-        version = "0.1.0"
+    version = dataset_to_version(dataset_name)
     return f"{dataset_name}/{version}"
+
+
+def _get_image_key(dataset_name: str, observation_features) -> str:
+    """Get the appropriate image key for different datasets."""
+    # Standard key used by most datasets
+    if "image" in observation_features:
+        return "image"
+    
+    # Dataset-specific mappings
+    if dataset_name == "droid":
+        # Droid has multiple camera views, prefer exterior view
+        if "exterior_image_1_left" in observation_features:
+            return "exterior_image_1_left"
+        elif "exterior_image_2_left" in observation_features:
+            return "exterior_image_2_left"
+        elif "wrist_image_left" in observation_features:
+            return "wrist_image_left"
+    
+    # Fallback: try to find any image-like key
+    for key in observation_features.keys():
+        if "image" in key.lower():
+            return key
+    
+    return None
 
 
 def write_video(frames: List[Image.Image], out_path: str, fps: int) -> None:
@@ -49,9 +70,17 @@ def export_videos(
             continue
 
         builder = tfds.builder_from_directory(builder_dir=builder_dir)
-        if display_key not in builder.info.features["steps"]["observation"].keys():
-            print(f"[WARN] Skipping. Display key '{display_key}' missing in {ds_name}")
-            continue
+        observation_features = builder.info.features["steps"]["observation"]
+        
+        # Auto-detect the appropriate image key if the default doesn't exist
+        if display_key not in observation_features.keys():
+            detected_key = _get_image_key(ds_name, observation_features)
+            if detected_key:
+                print(f"[INFO] Using '{detected_key}' instead of '{display_key}' for {ds_name}")
+                display_key = detected_key
+            else:
+                print(f"[WARN] Skipping. No image key found in {ds_name} (available keys: {list(observation_features.keys())})")
+                continue
 
         if info:
             try:
