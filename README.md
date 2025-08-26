@@ -5,22 +5,20 @@ This repo contains a plug-and-play tool to massively multiply robot training dat
 <table>
   <tr>
     <td align="center">
-      <strong>Original Input</strong><br>
-      <img src="assets/input.gif" width="300" alt="Original robot training video">
-    </td>
-    <td align="center">
-      <strong>Outdoor Scene</strong><br>
-      <img src="assets/output-park.gif" width="300" alt="Robot video transformed to park setting">
+      <strong>Generating new lighting conditions</strong><br>
+      <img src="assets/lighting.gif" width="300" alt="Generating new lighting conditions">
     </td>
   </tr>
   <tr>
     <td align="center">
-      <strong>Factory Scene</strong><br>
-      <img src="assets/output-factory.gif" width="300" alt="Robot video transformed to factory setting">
+      <strong>Replacing objects</strong><br>
+      <img src="assets/objects.gif" width="300" alt="Replacing objects">
     </td>
+  </tr>
+  <tr>
     <td align="center">
-      <strong>Flashing Lights Scene</strong><br>
-      <img src="assets/output-flash.gif" width="300" alt="Robot video with flash lighting effects">
+      <strong>Replacing surface textures</strong><br>
+      <img src="assets/surface.gif" width="300" alt="Replacing surface textures">
     </td>
   </tr>
 </table>
@@ -83,6 +81,27 @@ docker run --rm \
   --max_episodes 5 --fps 24 --info
 ```
 
+- For datasets with multiple camera views, you can pre-select the image key to avoid interactive prompts:
+```bash
+docker run --rm \
+  -v "$(pwd)/oxe-datasets:/datasets:ro" \
+  -v "$(pwd)/videos:/videos" \
+  oxe-tool export_video \
+  --dataset viola \
+  --image_key_choice 2 \
+  --max_episodes 5
+```
+
+- Or run interactively to choose camera views during execution (simple numbered selection):
+```bash
+docker run --rm -it \
+  -v "$(pwd)/oxe-datasets:/datasets:ro" \
+  -v "$(pwd)/videos:/videos" \
+  oxe-tool export_video \
+  --dataset viola \
+  --max_episodes 5
+```
+
 - Generate a transformed video:
 ```bash
 docker run --rm \
@@ -117,6 +136,8 @@ Subcommands and key options:
   - Reads from `/datasets`, writes to `/videos` (both mounted via Docker `-v`)
   - `--dataset` (repeatable), or `--datasets` (comma/space-separated). If not provided, defaults to `dlr_sara_grid_clamp_converted_externally_to_rlds`.
   - `--split` (default `train`), `--max_episodes` (default `5`), `--fps` (default `24`), `--display_key` (default `image`), `--info`
+  - `--image_key_choice`: Pre-select image key choice (1-based index) for datasets with multiple camera views to avoid interactive prompts
+  - For interactive selection in Docker, add `-it` flags: `docker run --rm -it ...`
 
 - `generate_video`
   - Reads/writes from `/videos` (mounted via Docker `-v`)
