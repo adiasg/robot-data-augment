@@ -1,4 +1,5 @@
 import os
+import sys
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 from typing import List
 
@@ -10,6 +11,8 @@ from PIL import Image
 
 from download_dataset import dataset_to_version
 
+# Removed inquirer dependency - using simple text-based selection only
+
 # Reduce TensorFlow Python logger verbosity as well
 tf.get_logger().setLevel("ERROR")
 
@@ -19,28 +22,60 @@ def dataset2path(dataset_name: str) -> str:
     return f"{dataset_name}/{version}"
 
 
-def _get_image_key(dataset_name: str, observation_features) -> str:
-    """Get the appropriate image key for different datasets."""
-    # Standard key used by most datasets
-    if "image" in observation_features:
-        return "image"
-    
-    # Dataset-specific mappings
-    if dataset_name == "droid":
-        # Droid has multiple camera views, prefer exterior view
-        if "exterior_image_1_left" in observation_features:
-            return "exterior_image_1_left"
-        elif "exterior_image_2_left" in observation_features:
-            return "exterior_image_2_left"
-        elif "wrist_image_left" in observation_features:
-            return "wrist_image_left"
-    
-    # Fallback: try to find any image-like key
+def _select_image_key_interactively(dataset_name: str, observation_features, pre_selected_choice: int = None) -> str:
+    """Interactively select the appropriate image key for the dataset."""
+    # Filter for image-like keys
+    image_keys = []
     for key in observation_features.keys():
-        if "image" in key.lower():
-            return key
+        if "image" in key.lower() or "rgb" in key.lower():
+            image_keys.append(key)
     
-    return None
+    if not image_keys:
+        print(f"[WARN] No image-like keys found in {dataset_name}")
+        print(f"Available keys: {list(observation_features.keys())}")
+        return None
+    
+    if len(image_keys) == 1:
+        print(f"[INFO] Only one image key available: {image_keys[0]}")
+        return image_keys[0]
+    
+    # Multiple image keys available
+    print(f"\n[INFO] Multiple image keys found for dataset '{dataset_name}':")
+    for i, key in enumerate(image_keys):
+        print(f"  {i + 1}. {key}")
+    
+    # Use pre-selected choice if provided
+    if pre_selected_choice is not None:
+        if 1 <= pre_selected_choice <= len(image_keys):
+            selected_key = image_keys[pre_selected_choice - 1]
+            print(f"[INFO] Using pre-selected choice {pre_selected_choice}: {selected_key}")
+            return selected_key
+        else:
+            print(f"[WARN] Invalid pre-selected choice {pre_selected_choice}, must be 1-{len(image_keys)}. Falling back to interactive selection.")
+    
+    # Check if we're in a truly interactive environment first
+    is_interactive = sys.stdin.isatty() and sys.stdout.isatty()
+    
+    if not is_interactive:
+        # Not in interactive mode, use default immediately
+        print(f"[INFO] Non-interactive mode detected. Using default: {image_keys[0]}")
+        print(f"[TIP] Use --image_key_choice N to pre-select, or run with 'docker run -it' for interactive mode")
+        return image_keys[0]
+    
+    # Interactive mode - simple text-based selection
+    while True:
+        try:
+            choice = input(f"\nEnter choice (1-{len(image_keys)}) [default: 1]: ").strip()
+            if not choice:
+                return image_keys[0]
+            choice_idx = int(choice) - 1
+            if 0 <= choice_idx < len(image_keys):
+                return image_keys[choice_idx]
+            else:
+                print(f"Please enter a number between 1 and {len(image_keys)}")
+        except (ValueError, EOFError, KeyboardInterrupt):
+            print(f"[INFO] Using default: {image_keys[0]}")
+            return image_keys[0]
 
 
 def write_video(frames: List[Image.Image], out_path: str, fps: int) -> None:
@@ -61,6 +96,7 @@ def export_videos(
     max_episodes: int = 5,
     fps: int = 24,
     display_key: str = "image",
+    image_key_choice: int = None,
     info: bool = False,
 ) -> None:
     for ds_name in dataset_names:
@@ -74,12 +110,12 @@ def export_videos(
         
         # Auto-detect the appropriate image key if the default doesn't exist
         if display_key not in observation_features.keys():
-            detected_key = _get_image_key(ds_name, observation_features)
-            if detected_key:
-                print(f"[INFO] Using '{detected_key}' instead of '{display_key}' for {ds_name}")
-                display_key = detected_key
+            selected_key = _select_image_key_interactively(ds_name, observation_features, image_key_choice)
+            if selected_key:
+                print(f"[INFO] Using '{selected_key}' instead of '{display_key}' for {ds_name}")
+                display_key = selected_key
             else:
-                print(f"[WARN] Skipping. No image key found in {ds_name} (available keys: {list(observation_features.keys())})")
+                print(f"[WARN] Skipping. No image key selected for {ds_name}")
                 continue
 
         if info:

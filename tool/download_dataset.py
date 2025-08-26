@@ -10,9 +10,12 @@ def dataset_to_version(dataset_name: str) -> str:
         return "1.0.1"
     if dataset_name == "robo_net":
         return "1.0.0"
+    if dataset_name == "cmu_playing_with_food":
+        return "1.0.0"
     if dataset_name == "language_table":
         return "0.0.1"
     return "0.1.0"
+
 
 
 def _get_dataset_prefix(dataset_name: str) -> str:

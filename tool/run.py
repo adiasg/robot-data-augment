@@ -52,6 +52,7 @@ def subcommand_export(args: argparse.Namespace) -> int:
         max_episodes=args.max_episodes,
         fps=args.fps,
         display_key=args.display_key,
+        image_key_choice=args.image_key_choice,
         info=args.info,
     ) or 0
 
@@ -90,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--max_episodes", type=int, default=5, help="Max episodes per dataset (default: 5)")
     pe.add_argument("--fps", type=int, default=24, help="Video FPS (default: 24)")
     pe.add_argument("--display_key", type=str, default="image", help="Observation key for frames (default: image)")
+    pe.add_argument("--image_key_choice", type=int, default=None, help="Pre-select image key choice (1-based index) to avoid interactive prompts")
     pe.add_argument("--info", action="store_true", help="Print per-dataset table with RGB shape and FPS")
     add_dataset_opts(pe)
     pe.set_defaults(func=subcommand_export)
